@@ -103,6 +103,28 @@ func (c *Client) EstimateQuote(fromCurrency, toCurrency, amountCurrency string, 
 	return &quoteResp, err
 }
 
+func (c *Client) Transfer(currency string, amount float64, fromAccount types.TransferAccount, toAccount types.TransferAccount) (*types.TransferResponse, error) {
+	order := map[string]interface{}{
+		"ccy":  currency,
+		"amt":  amount,
+		"from": fromAccount,
+		"to":   toAccount,
+	}
+	resp, err := c.Do("POST", "/api/v5/asset/transfer", order)
+
+	var transferResp types.TransferResponse
+	err = json.Unmarshal(resp, &transferResp)
+	if err != nil {
+		return nil, err
+	}
+
+	if transferResp.Code != "0" {
+		return nil, errors.New(transferResp.Msg)
+	}
+
+	return &transferResp, err
+}
+
 func (c *Client) Convert(fromCurrency, toCurrency, amountCurrency string, amount float64) (*types.ConvertTradeResponse, error) {
 	estimateQuote, err := c.EstimateQuote(fromCurrency, toCurrency, amountCurrency, amount)
 	if err != nil {
